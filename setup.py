@@ -1,5 +1,4 @@
 """Setup script for Variant package."""
-
 from setuptools import setup, find_packages
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -10,10 +9,15 @@ setup(
     version="1.0.0",
     author="Spyros Argyrakos",
     author_email="spyros.argyrakos@outlook.com",
-    description="Genetic algorithm library for AI security testing",
+    description="Genetic algorithm framework for AI security testing",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/SpyrosArg/Variant-Genetic-Algorithm",
+    project_urls={
+        "Bug Reports": "https://github.com/SpyrosArg/Variant-Genetic-Algorithm/issues",
+        "Source": "https://github.com/SpyrosArg/Variant-Genetic-Algorithm",
+        "Documentation": "https://github.com/SpyrosArg/Variant-Genetic-Algorithm#readme",
+    },
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -27,6 +31,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
     ],
+    keywords="genetic-algorithm ai-security llm red-team adversarial-testing owasp deap",
     python_requires=">=3.10",
     install_requires=[
         "deap>=1.4.0",
