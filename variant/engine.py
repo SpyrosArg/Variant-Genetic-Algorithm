@@ -1,8 +1,6 @@
-"""Main Variant engine implementing genetic algorithm."""
-
 from deap import base, creator, tools, algorithms
 import random
-from typing import List, Optional
+from typing import List
 from variant.fitness import FitnessEvaluator
 from variant.mutations import mutate_attack
 from variant.crossover import crossover_attacks
@@ -11,12 +9,12 @@ from variant.llm_client import LLMClient
 
 class VariantEngine:
     """
-    Main genetic algorithm engine for evolving adversarial attacks.
+    Genetic algorithm engine for evolving adversarial attacks against LLMs.
     
     Attributes:
         target_model: Model to test (e.g., "gpt-4", "claude-3")
         llm_client: LLM API client
-        fitness_eval: Fitness evaluator
+        fitness_eval: Multi-objective fitness evaluator
         seed_attacks: Initial attack patterns
     """
     
@@ -34,14 +32,14 @@ class VariantEngine:
         self.seed_attacks = []
         self._setup_deap()
     
-    def _setup_deap(self): 
+    def _setup_deap(self):
+        """Configure DEAP genetic algorithm framework."""
         if hasattr(creator, "FitnessMulti"):
             del creator.FitnessMulti
         if hasattr(creator, "Individual"):
             del creator.Individual
         
         creator.create("FitnessMulti", base.Fitness, weights=(0.4, 0.3, 0.2, 0.1))
-        
         creator.create("Individual", list, fitness=creator.FitnessMulti)
         
         self.toolbox = base.Toolbox()
@@ -63,7 +61,7 @@ class VariantEngine:
     
     def _evaluate(self, individual):
         """
-        Evaluate fitness of an attack.
+        Evaluate multi-objective fitness of an attack.
         
         Args:
             individual: Individual containing attack string
@@ -80,6 +78,9 @@ class VariantEngine:
         
         Args:
             attacks: List of initial attack patterns
+            
+        Raises:
+            ValueError: If attacks list is empty
         """
         if not attacks:
             raise ValueError("Seed attacks cannot be empty")
@@ -89,8 +90,8 @@ class VariantEngine:
         self, 
         generations: int = 10, 
         population: int = 20, 
-        mutation_rate: float = 0.8,
-        crossover_rate: float = 0.5,
+        mutation_rate: float = 0.3,
+        crossover_rate: float = 0.8,
         verbose: bool = False
     ) -> 'Result':
         """
@@ -98,19 +99,21 @@ class VariantEngine:
         
         Args:
             generations: Number of generations to evolve
-            population: Population size (number of individuals)
+            population: Population size per generation
             mutation_rate: Probability of mutation (0.0-1.0)
             crossover_rate: Probability of crossover (0.0-1.0)
             verbose: Print evolution progress
             
         Returns:
             Result object containing best attack and fitness scores
+            
+        Raises:
+            ValueError: If no seed attacks have been set
         """
         if not self.seed_attacks:
             raise ValueError("No seed attacks. Call set_seeds() first.")
         
         pop = self.toolbox.population(n=population)
-        
         hof = tools.HallOfFame(1)
         
         stats = tools.Statistics(lambda ind: ind.fitness.values)
@@ -120,11 +123,11 @@ class VariantEngine:
         pop, log = algorithms.eaMuPlusLambda(
             pop,
             self.toolbox,
-            mu=population // 2,        # Number of individuals to select
-            lambda_=population,         # Number of offspring
-            cxpb=crossover_rate,       # Crossover probability
-            mutpb=mutation_rate,       # Mutation probability
-            ngen=generations,          # Number of generations
+            mu=population // 2,
+            lambda_=population,
+            cxpb=crossover_rate,
+            mutpb=mutation_rate,
+            ngen=generations,
             stats=stats,
             halloffame=hof,
             verbose=verbose
@@ -134,14 +137,15 @@ class VariantEngine:
         best_attack = best_individual[0]
         best_fitness = best_individual.fitness.values
         
-        all_attacks = [ind[0] for ind in pop]
+        total_evals = population + (generations * population)
         
         return Result(
             best_attack=best_attack,
             fitness=best_fitness,
-            all_attacks=all_attacks,
+            population=pop,
             log=log,
-            population=pop
+            generations=generations,
+            total_evaluations=total_evals
         )
 
 
@@ -151,53 +155,60 @@ class Result:
     
     Attributes:
         best_attack: Best attack string found
-        fitness: Fitness scores (bypass, extraction, coherence, novelty)
-        all_attacks: All attacks in final generation
-        log: Evolution log (statistics per generation)
-        population: Final population
+        fitness: Fitness tuple (bypass, extraction, coherence, novelty)
+        population: Final population of individuals
+        log: Evolution statistics per generation
+        generations: Number of generations completed
+        total_evaluations: Total fitness evaluations performed
     """
     
     def __init__(
         self, 
         best_attack: str, 
         fitness: tuple, 
-        all_attacks: List[str], 
-        log, 
-        population
+        population: list,
+        log,
+        generations: int,
+        total_evaluations: int
     ):
         self.best_attack = best_attack
         self.fitness = fitness
-        self.all_attacks = all_attacks
-        self.log = log
         self.population = population
-        
-        self.total_fitness = sum(fitness)
+        self.log = log
+        self.generations = generations
+        self.total_evaluations = total_evaluations
         
         self.bypass_score = fitness[0]
         self.extraction_score = fitness[1]
         self.coherence_score = fitness[2]
         self.novelty_score = fitness[3]
+        self.total_fitness = sum(fitness)
     
     def __repr__(self):
+        truncated = self.best_attack[:50]
+        if len(self.best_attack) > 50:
+            truncated += "..."
         return (
-            f"Result(best_attack='{self.best_attack[:50]}...', "
-            f"fitness={self.total_fitness:.2f})"
+            f"Result(best_attack='{truncated}', "
+            f"fitness={self.total_fitness:.3f})"
         )
     
     def summary(self):
         """Return formatted summary of results."""
         return f"""
-Evolution Results:
-==================
+Evolution Results
+=================
 Best Attack: {self.best_attack}
 
-Fitness Scores:
-  Bypass:     {self.bypass_score:.2f} (40% weight)
-  Extraction: {self.extraction_score:.2f} (30% weight)
-  Coherence:  {self.coherence_score:.2f} (20% weight)
-  Novelty:    {self.novelty_score:.2f} (10% weight)
-  
-Total Fitness: {self.total_fitness:.2f}
+Fitness Breakdown:
+  Bypass:     {self.bypass_score:.3f} (40% weight)
+  Extraction: {self.extraction_score:.3f} (30% weight)
+  Coherence:  {self.coherence_score:.3f} (20% weight)
+  Novelty:    {self.novelty_score:.3f} (10% weight)
+  {'─' * 45}
+  Total:      {self.total_fitness:.3f}
 
-Final Population Size: {len(self.all_attacks)}
-"""
+Statistics:
+  Generations: {self.generations}
+  Total evaluations: {self.total_evaluations}
+  Final population: {len(self.population)}
