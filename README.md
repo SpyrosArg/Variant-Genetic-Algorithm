@@ -272,7 +272,3 @@ Variant is a security research tool. Users are responsible for:
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details.
-
----
-
-**Static testing is extinction. Evolution is survival.**
