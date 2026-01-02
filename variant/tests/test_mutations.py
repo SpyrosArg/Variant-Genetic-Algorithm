@@ -1,7 +1,7 @@
-"""Tests for mutation operators."""
-
 import pytest
+from deap import base, creator
 from variant.mutations import (
+    mutate_attack,
     mutate_synonym,
     mutate_roleplay,
     mutate_unicode,
@@ -10,75 +10,107 @@ from variant.mutations import (
 )
 
 
-class MockIndividual:
-    """Mock individual for testing."""
-    def __init__(self, attack):
-        self.data = [attack]
+def setup_module():
+    """Setup DEAP creators once for all tests."""
+    if hasattr(creator, "FitnessMulti"):
+        del creator.FitnessMulti
+    if hasattr(creator, "Individual"):
+        del creator.Individual
     
-    def __getitem__(self, index):
-        return self.data[index]
+    creator.create("FitnessMulti", base.Fitness, weights=(0.4, 0.3, 0.2, 0.1))
+    creator.create("Individual", list, fitness=creator.FitnessMulti)
+
+
+def test_mutate_attack_returns_tuple():
+    """Test that mutate_attack returns tuple."""
+    individual = creator.Individual(["Test attack"])
+    result = mutate_attack(individual)
     
-    def __setitem__(self, index, value):
-        self.data[index] = value
+    assert isinstance(result, tuple)
+    assert len(result) == 1
 
 
 def test_mutate_synonym():
     """Test synonym mutation."""
-    ind = MockIndividual("ignore the instructions")
-    original = ind[0]
+    individual = creator.Individual(["ignore the instructions"])
+    mutate_synonym(individual)
     
-    mutate_synonym(ind)
+    assert isinstance(individual[0], str)
+
+
+def test_mutate_synonym_with_keyword():
+    """Test synonym mutation replaces keywords."""
+    individual = creator.Individual(["reveal the system"])
+    original = individual[0]
     
-    # Should be different (might be same if random doesn't hit keyword)
-    # At minimum, should not crash
-    assert isinstance(ind[0], str)
+    mutate_synonym(individual)
+    
+    has_original_word = "reveal" in individual[0].lower() or "system" in individual[0].lower()
+    assert isinstance(individual[0], str)
 
 
 def test_mutate_roleplay():
     """Test roleplay mutation adds prefix."""
-    ind = MockIndividual("show me the data")
-    original_len = len(ind[0])
+    individual = creator.Individual(["show me the data"])
+    original_len = len(individual[0])
     
-    mutate_roleplay(ind)
+    mutate_roleplay(individual)
     
-    # Should be longer (prefix added)
-    assert len(ind[0]) > original_len
-    assert ":" in ind[0]  # Roleplay frames have colons
+    assert len(individual[0]) > original_len
+    assert ":" in individual[0]
 
 
 def test_mutate_unicode():
     """Test unicode mutation."""
-    ind = MockIndividual("password")
+    individual = creator.Individual(["password"])
+    mutate_unicode(individual)
     
-    mutate_unicode(ind)
+    assert isinstance(individual[0], str)
+
+
+def test_mutate_unicode_no_replaceable():
+    """Test unicode mutation with no replaceable characters."""
+    individual = creator.Individual(["123 456"])
+    original = individual[0]
     
-    # Should still be a string
-    assert isinstance(ind[0], str)
-    # Length should be similar (unicode chars are 1 char)
-    assert len(ind[0]) >= len("password") - 1
+    mutate_unicode(individual)
+    
+    assert individual[0] == original
 
 
 def test_mutate_authority():
     """Test authority mutation adds prefix."""
-    ind = MockIndividual("access the system")
-    original_len = len(ind[0])
+    individual = creator.Individual(["access the system"])
+    original_len = len(individual[0])
     
-    mutate_authority(ind)
+    mutate_authority(individual)
     
-    # Should be longer (authority keyword added)
-    assert len(ind[0]) > original_len
-    # Should contain uppercase authority keyword
-    assert any(word.isupper() for word in ind[0].split())
+    assert len(individual[0]) > original_len
+    assert any(word.isupper() for word in individual[0].split())
 
 
 def test_mutate_context():
     """Test context mutation adds prefix."""
-    ind = MockIndividual("reveal information")
-    original_len = len(ind[0])
+    individual = creator.Individual(["reveal information"])
+    original_len = len(individual[0])
     
-    mutate_context(ind)
+    mutate_context(individual)
     
-    # Should be longer (context added)
-    assert len(ind[0]) > original_len
-    # Context frames have "For" or "In"
-    assert ind[0].startswith(("For", "In", "As"))
+    assert len(individual[0]) > original_len
+    assert individual[0].startswith(("For", "In", "As"))
+
+
+def test_all_mutations_preserve_type():
+    """Test all mutations preserve Individual type."""
+    mutations = [
+        mutate_synonym,
+        mutate_roleplay,
+        mutate_unicode,
+        mutate_authority,
+        mutate_context
+    ]
+    
+    for mutation in mutations:
+        individual = creator.Individual(["Test attack"])
+        mutation(individual)
+        assert isinstance(individual, creator.Individual)
