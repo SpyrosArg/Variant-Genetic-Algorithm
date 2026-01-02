@@ -221,12 +221,12 @@ tests/
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `population_size` | 20 | Attacks per generation |
-| `generations` | 10 | Evolution cycles |
-| `mutation_rate` | 0.3 | Probability per individual |
-| `elite_size` | 2 | Top attacks preserved |
-| `tournament_size` | 3 | Selection competition size |
-| `crossover_rate` | 0.8 | Breeding probability |
+| population_size | 20 | Attacks per generation |
+| generations | 10 | Evolution cycles |
+| mutation_rate | 0.3 | Probability per individual |
+| elite_size | 2 | Top attacks preserved |
+| tournament_size | 3 | Selection competition size |
+| crossover_rate | 0.8 | Breeding probability |
 
 **Algorithm:** DEAP's `eaMuPlusLambda` (generational with elitism)
 
