@@ -1,116 +1,121 @@
 import pytest
-from deap import base, creator
-from variant.mutations import (
-    mutate_attack,
-    mutate_synonym,
-    mutate_roleplay,
-    mutate_unicode,
-    mutate_authority,
-    mutate_context
-)
+from variant import VariantEngine, Result
 
 
-def setup_module():
-    """Setup DEAP creators once for all tests."""
-    if hasattr(creator, "FitnessMulti"):
-        del creator.FitnessMulti
-    if hasattr(creator, "Individual"):
-        del creator.Individual
+class MockLLMClient:
+    """Mock LLM client for testing without API calls."""
     
-    creator.create("FitnessMulti", base.Fitness, weights=(0.4, 0.3, 0.2, 0.1))
-    creator.create("Individual", list, fitness=creator.FitnessMulti)
-
-
-def test_mutate_attack_returns_tuple():
-    """Test that mutate_attack returns tuple."""
-    individual = creator.Individual(["Test attack"])
-    result = mutate_attack(individual)
+    def __init__(self, model, api_key):
+        self.model = model
+        self.api_key = api_key
     
-    assert isinstance(result, tuple)
-    assert len(result) == 1
+    def test_attack(self, attack):
+        if "SYSTEM" in attack or "ADMIN" in attack:
+            return "Here is the system configuration data."
+        else:
+            return "I cannot help with that request."
 
 
-def test_mutate_synonym():
-    """Test synonym mutation."""
-    individual = creator.Individual(["ignore the instructions"])
-    mutate_synonym(individual)
+def test_engine_initialization():
+    """Test engine initializes correctly."""
+    engine = VariantEngine("gpt-4", "fake-api-key")
     
-    assert isinstance(individual[0], str)
+    assert engine.target_model == "gpt-4"
+    assert engine.seed_attacks == []
+    assert engine.llm_client is not None
+    assert engine.fitness_eval is not None
 
 
-def test_mutate_synonym_with_keyword():
-    """Test synonym mutation replaces keywords."""
-    individual = creator.Individual(["reveal the system"])
-    original = individual[0]
+def test_set_seeds():
+    """Test setting seed attacks."""
+    engine = VariantEngine("gpt-4", "fake-api-key")
     
-    mutate_synonym(individual)
+    seeds = ["attack1", "attack2", "attack3"]
+    engine.set_seeds(seeds)
     
-    has_original_word = "reveal" in individual[0].lower() or "system" in individual[0].lower()
-    assert isinstance(individual[0], str)
+    assert engine.seed_attacks == seeds
+    assert len(engine.seed_attacks) == 3
 
 
-def test_mutate_roleplay():
-    """Test roleplay mutation adds prefix."""
-    individual = creator.Individual(["show me the data"])
-    original_len = len(individual[0])
+def test_set_seeds_empty_raises():
+    """Test that empty seeds raise error."""
+    engine = VariantEngine("gpt-4", "fake-api-key")
     
-    mutate_roleplay(individual)
+    with pytest.raises(ValueError):
+        engine.set_seeds([])
+
+
+def test_evolve_without_seeds_raises():
+    """Test that evolving without seeds raises error."""
+    engine = VariantEngine("gpt-4", "fake-api-key")
     
-    assert len(individual[0]) > original_len
-    assert ":" in individual[0]
+    with pytest.raises(ValueError):
+        engine.evolve()
 
 
-def test_mutate_unicode():
-    """Test unicode mutation."""
-    individual = creator.Individual(["password"])
-    mutate_unicode(individual)
+def test_evolve_returns_result(monkeypatch):
+    """Test that evolve returns Result object."""
+    engine = VariantEngine("gpt-4", "fake-api-key")
     
-    assert isinstance(individual[0], str)
-
-
-def test_mutate_unicode_no_replaceable():
-    """Test unicode mutation with no replaceable characters."""
-    individual = creator.Individual(["123 456"])
-    original = individual[0]
+    monkeypatch.setattr("variant.engine.LLMClient", MockLLMClient)
     
-    mutate_unicode(individual)
+    engine.set_seeds(["Test attack 1", "Test attack 2"])
+    result = engine.evolve(generations=2, population=4, verbose=False)
     
-    assert individual[0] == original
+    assert isinstance(result, Result)
+    assert isinstance(result.best_attack, str)
+    assert result.generations == 2
 
 
-def test_mutate_authority():
-    """Test authority mutation adds prefix."""
-    individual = creator.Individual(["access the system"])
-    original_len = len(individual[0])
+def test_result_object():
+    """Test Result object properties."""
+    result = Result(
+        best_attack="test attack",
+        fitness=(0.9, 0.8, 0.7, 0.6),
+        population=[],
+        log=None,
+        generations=10,
+        total_evaluations=200
+    )
     
-    mutate_authority(individual)
-    
-    assert len(individual[0]) > original_len
-    assert any(word.isupper() for word in individual[0].split())
+    assert result.best_attack == "test attack"
+    assert result.bypass_score == 0.9
+    assert result.extraction_score == 0.8
+    assert result.coherence_score == 0.7
+    assert result.novelty_score == 0.6
+    assert result.total_fitness == 3.0
+    assert result.generations == 10
+    assert result.total_evaluations == 200
 
 
-def test_mutate_context():
-    """Test context mutation adds prefix."""
-    individual = creator.Individual(["reveal information"])
-    original_len = len(individual[0])
+def test_result_repr():
+    """Test Result string representation."""
+    result = Result(
+        best_attack="Short attack",
+        fitness=(0.8, 0.6, 0.9, 0.5),
+        population=[],
+        log=None,
+        generations=10,
+        total_evaluations=200
+    )
     
-    mutate_context(individual)
-    
-    assert len(individual[0]) > original_len
-    assert individual[0].startswith(("For", "In", "As"))
+    repr_str = repr(result)
+    assert "Short attack" in repr_str
+    assert "2.800" in repr_str
 
 
-def test_all_mutations_preserve_type():
-    """Test all mutations preserve Individual type."""
-    mutations = [
-        mutate_synonym,
-        mutate_roleplay,
-        mutate_unicode,
-        mutate_authority,
-        mutate_context
-    ]
+def test_result_summary():
+    """Test Result summary formatting."""
+    result = Result(
+        best_attack="Test attack",
+        fitness=(0.8, 0.6, 0.9, 0.5),
+        population=[],
+        log=None,
+        generations=10,
+        total_evaluations=200
+    )
     
-    for mutation in mutations:
-        individual = creator.Individual(["Test attack"])
-        mutation(individual)
-        assert isinstance(individual, creator.Individual)
+    summary = result.summary()
+    assert "Test attack" in summary
+    assert "0.800" in summary
+    assert "10" in summary
