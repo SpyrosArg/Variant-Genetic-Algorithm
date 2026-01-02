@@ -58,3 +58,14 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+
+# Variant-specific
+results/
+outputs/
+evolved_attacks/
+attack_archive/
+fitness_history/
+*.pkl
+*.pickle
+experiments/
+checkpoints/
