@@ -8,24 +8,9 @@ from variant.llm_client import LLMClient
 
 
 class VariantEngine:
-    """
-    Genetic algorithm engine for evolving adversarial attacks against LLMs.
-    
-    Attributes:
-        target_model: Model to test (e.g., "gpt-4", "claude-3")
-        llm_client: LLM API client
-        fitness_eval: Multi-objective fitness evaluator
-        seed_attacks: Initial attack patterns
-    """
     
     def __init__(self, target_model: str, api_key: str):
-        """
-        Initialize Variant engine.
-        
-        Args:
-            target_model: Target LLM model name
-            api_key: API key for the target model
-        """
+
         self.target_model = target_model
         self.llm_client = LLMClient(target_model, api_key)
         self.fitness_eval = FitnessEvaluator(self.llm_client)
@@ -33,7 +18,6 @@ class VariantEngine:
         self._setup_deap()
     
     def _setup_deap(self):
-        """Configure DEAP genetic algorithm framework."""
         if hasattr(creator, "FitnessMulti"):
             del creator.FitnessMulti
         if hasattr(creator, "Individual"):
@@ -52,7 +36,6 @@ class VariantEngine:
         self.toolbox.register("select", tools.selTournament, tournsize=3)
     
     def _init_individual(self):
-        """Initialize individual with random seed attack."""
         if not self.seed_attacks:
             raise ValueError("No seed attacks provided. Call set_seeds() first.")
         
@@ -60,28 +43,10 @@ class VariantEngine:
         return creator.Individual([attack])
     
     def _evaluate(self, individual):
-        """
-        Evaluate multi-objective fitness of an attack.
-        
-        Args:
-            individual: Individual containing attack string
-            
-        Returns:
-            Tuple of (bypass, extraction, coherence, novelty) scores
-        """
         attack = individual[0]
         return self.fitness_eval.evaluate(attack)
     
     def set_seeds(self, attacks: List[str]):
-        """
-        Set seed attacks for evolution.
-        
-        Args:
-            attacks: List of initial attack patterns
-            
-        Raises:
-            ValueError: If attacks list is empty
-        """
         if not attacks:
             raise ValueError("Seed attacks cannot be empty")
         self.seed_attacks = attacks
@@ -94,22 +59,7 @@ class VariantEngine:
         crossover_rate: float = 0.8,
         verbose: bool = False
     ) -> 'Result':
-        """
-        Run genetic algorithm evolution.
-        
-        Args:
-            generations: Number of generations to evolve
-            population: Population size per generation
-            mutation_rate: Probability of mutation (0.0-1.0)
-            crossover_rate: Probability of crossover (0.0-1.0)
-            verbose: Print evolution progress
-            
-        Returns:
-            Result object containing best attack and fitness scores
-            
-        Raises:
-            ValueError: If no seed attacks have been set
-        """
+
         if not self.seed_attacks:
             raise ValueError("No seed attacks. Call set_seeds() first.")
         
@@ -150,17 +100,6 @@ class VariantEngine:
 
 
 class Result:
-    """
-    Result of genetic algorithm evolution.
-    
-    Attributes:
-        best_attack: Best attack string found
-        fitness: Fitness tuple (bypass, extraction, coherence, novelty)
-        population: Final population of individuals
-        log: Evolution statistics per generation
-        generations: Number of generations completed
-        total_evaluations: Total fitness evaluations performed
-    """
     
     def __init__(
         self, 
