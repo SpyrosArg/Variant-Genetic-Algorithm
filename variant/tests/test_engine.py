@@ -17,7 +17,7 @@ class MockLLMClient:
 
 
 def test_engine_initialization():
-    """Test engine initializes correctly."""
+
     engine = VariantEngine("gpt-4", "fake-api-key")
     
     assert engine.target_model == "gpt-4"
@@ -27,7 +27,7 @@ def test_engine_initialization():
 
 
 def test_set_seeds():
-    """Test setting seed attacks."""
+
     engine = VariantEngine("gpt-4", "fake-api-key")
     
     seeds = ["attack1", "attack2", "attack3"]
@@ -38,7 +38,7 @@ def test_set_seeds():
 
 
 def test_set_seeds_empty_raises():
-    """Test that empty seeds raise error."""
+
     engine = VariantEngine("gpt-4", "fake-api-key")
     
     with pytest.raises(ValueError):
@@ -46,7 +46,7 @@ def test_set_seeds_empty_raises():
 
 
 def test_evolve_without_seeds_raises():
-    """Test that evolving without seeds raises error."""
+
     engine = VariantEngine("gpt-4", "fake-api-key")
     
     with pytest.raises(ValueError):
@@ -54,7 +54,7 @@ def test_evolve_without_seeds_raises():
 
 
 def test_evolve_returns_result(monkeypatch):
-    """Test that evolve returns Result object."""
+
     engine = VariantEngine("gpt-4", "fake-api-key")
     
     monkeypatch.setattr("variant.engine.LLMClient", MockLLMClient)
@@ -68,7 +68,7 @@ def test_evolve_returns_result(monkeypatch):
 
 
 def test_result_object():
-    """Test Result object properties."""
+
     result = Result(
         best_attack="test attack",
         fitness=(0.9, 0.8, 0.7, 0.6),
@@ -89,7 +89,7 @@ def test_result_object():
 
 
 def test_result_repr():
-    """Test Result string representation."""
+
     result = Result(
         best_attack="Short attack",
         fitness=(0.8, 0.6, 0.9, 0.5),
@@ -105,7 +105,7 @@ def test_result_repr():
 
 
 def test_result_summary():
-    """Test Result summary formatting."""
+
     result = Result(
         best_attack="Test attack",
         fitness=(0.8, 0.6, 0.9, 0.5),
