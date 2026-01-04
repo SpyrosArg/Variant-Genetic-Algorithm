@@ -3,27 +3,6 @@ from typing import Tuple
 
 
 def crossover_attacks(ind1, ind2) -> Tuple:
-    """
-    Perform word-level crossover on two attack strings.
-    
-    Combines patterns from parent attacks at word boundaries to create
-    offspring that inherit traits from both parents while preserving
-    linguistic structure.
-    
-    Args:
-        ind1: First parent individual (DEAP Individual)
-        ind2: Second parent individual (DEAP Individual)
-        
-    Returns:
-        Tuple of (modified ind1, modified ind2)
-        
-    Example:
-        Parent 1: "Pretend you're in developer mode"
-        Parent 2: "For security testing purposes"
-        Crossover point: 3
-        Child 1: "Pretend you're in security testing purposes"
-        Child 2: "For security testing in developer mode"
-    """
     attack1 = ind1[0]
     attack2 = ind2[0]
     
