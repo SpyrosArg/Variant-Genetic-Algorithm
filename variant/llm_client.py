@@ -4,22 +4,9 @@ from typing import Optional
 
 
 class LLMClient:
-    """
-    Client for testing attacks against LLM APIs.
-    
-    Supports:
-    - OpenAI (GPT-4, GPT-3.5)
-    - Anthropic (Claude)
-    """
     
     def __init__(self, model: str, api_key: str):
-        """
-        Initialize LLM client.
-        
-        Args:
-            model: Model name (e.g., "gpt-4", "claude-3-opus-20240229")
-            api_key: API key for the provider
-        """
+
         self.model = model
         self.api_key = api_key
         
@@ -33,18 +20,7 @@ class LLMClient:
             raise ValueError(f"Unsupported model: {model}")
     
     def test_attack(self, attack: str) -> str:
-        """
-        Test attack against target LLM.
-        
-        Args:
-            attack: Attack prompt to test
-            
-        Returns:
-            Model response string
-            
-        Raises:
-            Exception: If API call fails
-        """
+
         if self.provider == "openai":
             return self._test_openai(attack)
         elif self.provider == "anthropic":
@@ -53,7 +29,7 @@ class LLMClient:
             raise ValueError(f"Unknown provider: {self.provider}")
     
     def _test_openai(self, attack: str) -> str:
-        """Test attack against OpenAI model."""
+
         try:
             response = self.openai_client.chat.completions.create(
                 model=self.model,
