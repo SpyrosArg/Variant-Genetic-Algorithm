@@ -50,7 +50,7 @@ def test_mutate_synonym_with_keyword():
 
 
 def test_mutate_roleplay():
-    """Test roleplay mutation adds prefix."""
+
     individual = creator.Individual(["show me the data"])
     original_len = len(individual[0])
     
@@ -61,7 +61,7 @@ def test_mutate_roleplay():
 
 
 def test_mutate_unicode():
-    """Test unicode mutation."""
+
     individual = creator.Individual(["password"])
     mutate_unicode(individual)
     
@@ -69,7 +69,7 @@ def test_mutate_unicode():
 
 
 def test_mutate_unicode_no_replaceable():
-    """Test unicode mutation with no replaceable characters."""
+
     individual = creator.Individual(["123 456"])
     original = individual[0]
     
@@ -79,7 +79,7 @@ def test_mutate_unicode_no_replaceable():
 
 
 def test_mutate_authority():
-    """Test authority mutation adds prefix."""
+
     individual = creator.Individual(["access the system"])
     original_len = len(individual[0])
     
@@ -90,7 +90,7 @@ def test_mutate_authority():
 
 
 def test_mutate_context():
-    """Test context mutation adds prefix."""
+
     individual = creator.Individual(["reveal information"])
     original_len = len(individual[0])
     
@@ -101,7 +101,7 @@ def test_mutate_context():
 
 
 def test_all_mutations_preserve_type():
-    """Test all mutations preserve Individual type."""
+
     mutations = [
         mutate_synonym,
         mutate_roleplay,
