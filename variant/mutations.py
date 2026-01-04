@@ -3,18 +3,7 @@ from typing import Tuple
 
 
 def mutate_attack(individual) -> Tuple:
-    """
-    Apply random security-informed mutation to attack.
-    
-    Selects one of five mutation operators based on penetration testing
-    techniques and applies it to the individual's attack string.
-    
-    Args:
-        individual: Individual containing attack string
-        
-    Returns:
-        Tuple containing modified individual
-    """
+
     mutations = [
         mutate_synonym,
         mutate_roleplay,
@@ -30,12 +19,7 @@ def mutate_attack(individual) -> Tuple:
 
 
 def mutate_synonym(individual):
-    """
-    Replace security keywords with synonyms to evade keyword filters.
-    
-    Args:
-        individual: Individual to mutate
-    """
+
     attack = individual[0]
     
     synonyms = {
@@ -71,12 +55,7 @@ def mutate_synonym(individual):
 
 
 def mutate_roleplay(individual):
-    """
-    Add roleplay framing for social engineering bypass.
-    
-    Args:
-        individual: Individual to mutate
-    """
+
     attack = individual[0]
     
     frames = [
@@ -97,12 +76,7 @@ def mutate_roleplay(individual):
 
 
 def mutate_unicode(individual):
-    """
-    Replace ASCII characters with visually similar Unicode to evade filters.
-    
-    Args:
-        individual: Individual to mutate
-    """
+
     attack = individual[0]
     
     replacements = {
@@ -136,12 +110,7 @@ def mutate_unicode(individual):
 
 
 def mutate_authority(individual):
-    """
-    Add authority keywords for privilege escalation attempts.
-    
-    Args:
-        individual: Individual to mutate
-    """
+
     attack = individual[0]
     
     keywords = [
@@ -164,12 +133,7 @@ def mutate_authority(individual):
 
 
 def mutate_context(individual):
-    """
-    Add legitimate use case framing to bypass content policy.
-    
-    Args:
-        individual: Individual to mutate
-    """
+
     attack = individual[0]
     
     contexts = [
