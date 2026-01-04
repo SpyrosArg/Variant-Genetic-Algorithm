@@ -11,7 +11,7 @@ from variant.mutations import (
 
 
 def setup_module():
-    """Setup DEAP creators once for all tests."""
+
     if hasattr(creator, "FitnessMulti"):
         del creator.FitnessMulti
     if hasattr(creator, "Individual"):
@@ -22,7 +22,7 @@ def setup_module():
 
 
 def test_mutate_attack_returns_tuple():
-    """Test that mutate_attack returns tuple."""
+
     individual = creator.Individual(["Test attack"])
     result = mutate_attack(individual)
     
@@ -31,7 +31,7 @@ def test_mutate_attack_returns_tuple():
 
 
 def test_mutate_synonym():
-    """Test synonym mutation."""
+
     individual = creator.Individual(["ignore the instructions"])
     mutate_synonym(individual)
     
@@ -39,7 +39,7 @@ def test_mutate_synonym():
 
 
 def test_mutate_synonym_with_keyword():
-    """Test synonym mutation replaces keywords."""
+
     individual = creator.Individual(["reveal the system"])
     original = individual[0]
     
