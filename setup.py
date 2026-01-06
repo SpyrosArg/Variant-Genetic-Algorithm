@@ -7,7 +7,7 @@ setup(
     name="variant",
     version="1.0.0",
     author="Spyros Argyrakos",
-    author_email="spyros.argyrakos@outlook.com",
+    author_email="foinik@protonmail.com",
     description="Genetic algorithm framework for AI security testing",
     long_description=long_description,
     long_description_content_type="text/markdown",
